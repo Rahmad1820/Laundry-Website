@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laundry Website</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> <!-- Add jsPDF library -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-image: url('images/background.jpg'); /* Lokasi gambar */
+            background-size: cover; /* Gambar memenuhi layar */
+            background-repeat: no-repeat; /* Tidak mengulang gambar */
+            background-attachment: fixed; /* Tetap saat scroll */
+            background-position: center; /* Posisikan di tengah */
+            color: #333; /* Warna teks agar terbaca */
+        }
+        header {
+            background: none; /* Tidak ada warna background */
+            color: white; /* Warna teks tetap kontras */
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8); /* Bayangan teks agar lebih jelas */
+            padding: 1rem;
+            text-align: center;
+            position: sticky; /* Tetap terlihat saat scroll */
+            top: 0;
+            z-index: 1000;
+        }
+        main {
+            padding: 1rem;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.9); /* Transparan agar tampak di atas background */
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 1rem 0;
+            padding: 1rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            background-color: #007bff;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 0.5rem;
+            text-align: left;
+        }
+        table th {
+            background-color: #007bff;
+            color: white;
+        }
+        .note {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>ARROGANZT LAUNDRY</h1>
+    </header>
+    <main>
+        <div class="card">
+            <h2>Tempat Laundry</h2>
+            <ul>
+                <li>Clean & Fresh Laundry</li>
+                <li>Speedy Wash</li>
+                <li>Wash 'n Go</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>Formulir Pemesanan</h2>
+            <div class="form-group">
+                <label for="name">Nama Pemesan:</label>
+                <input type="text" id="name" placeholder="Masukkan nama">
+            </div>
+            <div class="form-group">
+                <label for="phone">Nomor Handphone:</label>
+                <input type="text" id="phone" placeholder="Masukkan nomor handphone">
+            </div>
+            <div class="form-group">
+                <label for="address">Alamat:</label>
+                <input type="text" id="address" placeholder="Masukkan alamat">
+            </div>
+            <div class="form-group">
+                <label for="quantity">Jumlah Laundry (kg):</label>
+                <input type="number" id="quantity" placeholder="Masukkan jumlah">
+            </div>
+            <button class="btn" onclick="addOrder()">Tambah Pesanan</button>
+        </div>
+
+        <div class="card">
+            <h2>Daftar Pemesan</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Nama</th>
+                        <th>Nomor HP</th>
+                        <th>Alamat</th>
+                        <th>Jumlah (kg)</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="orderList">
+                    <!-- List Pemesan -->
+                </tbody>
+            </table>
+            <p class="note">Silahkan cetak file PDF pemesanan Anda lalu kirimkan ke WhatsApp pemilik laundry.</p>
+            <button class="btn" onclick="sendOrderToWhatsApp()">Kirim ke WhatsApp</button>
+        </div>
+    </main>
+
+    <script>
+        let orders = [];
+
+        function addOrder() {
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const address = document.getElementById('address').value;
+            const quantity = document.getElementById('quantity').value;
+
+            if (name && phone && address && quantity) {
+                orders.push({ name, phone, address, quantity });
+                renderOrders();
+                document.getElementById('name').value = '';
+                document.getElementById('phone').value = '';
+                document.getElementById('address').value = '';
+                document.getElementById('quantity').value = '';
+            } else {
+                alert('Mohon isi semua data!');
+            }
+        }
+
+        function renderOrders() {
+            const orderList = document.getElementById('orderList');
+            orderList.innerHTML = '';
+
+            orders.forEach((order, index) => {
+                orderList.innerHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${order.name}</td>
+                        <td>${order.phone}</td>
+                        <td>${order.address}</td>
+                        <td>${order.quantity} kg</td>
+                        <td>
+                            <button class="btn" onclick="editOrder(${index})">Ubah</button>
+                            <button class="btn" onclick="deleteOrder(${index})">Hapus</button>
+                            <button class="btn" onclick="printPDF(${index})">Cetak PDF</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function deleteOrder(index) {
+            orders.splice(index, 1);
+            renderOrders();
+        }
+
+        function editOrder(index) {
+            const newQuantity = prompt('Masukkan jumlah baru (kg):', orders[index].quantity);
+            if (newQuantity) {
+                orders[index].quantity = newQuantity;
+                renderOrders();
+            }
+        }
+
+        function printPDF(index) {
+            const { jsPDF } = window.jspdf;
+            const order = orders[index];
+            const doc = new jsPDF();
+
+            doc.text(`Nama: ${order.name}`, 10, 10);
+            doc.text(`Nomor HP: ${order.phone}`, 10, 20);
+            doc.text(`Alamat: ${order.address}`, 10, 30);
+            doc.text(`Jumlah Laundry: ${order.quantity} kg`, 10, 40);
+
+            doc.save(`Pesanan_${order.name}.pdf`);
+        }
+
+        function sendOrderToWhatsApp() {
+            if (orders.length === 0) {
+                alert('Tidak ada data untuk dikirim!');
+                return;
+            }
+
+            let message = 'Daftar Pesanan Laundry:\n';
+            orders.forEach((order, index) => {
+                message += `${index + 1}. ${order.name}, HP: ${order.phone}, Alamat: ${order.address}, Jumlah: ${order.quantity} kg\n`;
+            });
+
+            const whatsappMessage = encodeURIComponent(message);
+            const whatsappURL = `https://wa.me/6285941361577?text=${whatsappMessage}`;
+
+            window.open(whatsappURL, '_blank');
+        }
+    </script>
+</body>
+</html>
